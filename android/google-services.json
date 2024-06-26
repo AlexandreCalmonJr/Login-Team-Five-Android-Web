@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "458530444305",
+    "firebase_url": "https://flixfive-5db87-default-rtdb.firebaseio.com",
+    "project_id": "flixfive-5db87",
+    "storage_bucket": "flixfive-5db87.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458530444305:android:18c83dbe21cee1bec84db0",
+        "android_client_info": {
+          "package_name": "com.teamfive.login"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "458530444305-lvm3a868sieuemsjukkde0f5pc1qh2i7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWx75Pjf7m6vOQWQHAgZKa9RR-mYPjzjI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "458530444305-lvm3a868sieuemsjukkde0f5pc1qh2i7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,42 +1,46 @@
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:typed_data';
 
 class ProfileRepository {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  Future<User?> getCurrentUser() async {
-    return _auth.currentUser;
-  }
-
-  Future<DocumentSnapshot> getUserProfile(User user) async {
+  Future<DocumentSnapshot> getUserProfile(User user) {
     return _firestore.collection('users').doc(user.uid).get();
   }
 
-  Future<void> createUserProfile(User user, Map<String, dynamic> data) async {
-    return _firestore.collection('users').doc(user.uid).set(data);
-  }
-  Future<void> updateUserProfile(User user, Map<String, dynamic> data) async {
-  return _firestore.collection('users').doc(user.uid).update(data);
-}
-  Future<String> uploadImage(Uint8List fileBytes) async {
-  User? user = _auth.currentUser;
-  if (user == null) {
-    throw Exception('Usuário não está logado');
+  Future<void> createUserProfile(User user, Map<String, dynamic> userProfile) {
+    return _firestore.collection('users').doc(user.uid).set(userProfile);
   }
 
-  String filePath = 'profile_images/${user.uid}/${DateTime.now().toIso8601String()}.jpeg';
-  Reference ref = _storage.ref().child(filePath);
-  UploadTask uploadTask = ref.putData(fileBytes, SettableMetadata(contentType: 'image/jpeg'));
-  TaskSnapshot taskSnapshot = await uploadTask;
-  return await taskSnapshot.ref.getDownloadURL();
-}
+  Future<void> updateUserProfile(User user, Map<String, dynamic> userProfile) {
+    return _firestore.collection('users').doc(user.uid).update(userProfile);
+  }
 
-  Future<String> getUserProfileImageUrl(User user) async {
-    DocumentSnapshot userProfile = await getUserProfile(user);
-    return userProfile['imageUrl'];
+  Future<String> uploadImage(Uint8List fileBytes, String fileName) async {
+    // Determina o tipo MIME com base na extensão do arquivo
+    String contentType;
+    if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) {
+      contentType = 'image/jpeg';
+    } else if (fileName.endsWith('.png')) {
+      contentType = 'image/png';
+    } else {
+      throw Exception('Unsupported file type');
+    }
+
+    final storageRef = _storage.ref().child('user_images/$fileName');
+    final uploadTask = storageRef.putData(
+      fileBytes,
+      SettableMetadata(contentType: contentType),
+    );
+    final snapshot = await uploadTask.whenComplete(() {});
+    return await snapshot.ref.getDownloadURL();
+  }
+
+  Future<void> deleteImage(String imageUrl) async {
+    final ref = _storage.refFromURL(imageUrl);
+    await ref.delete();
   }
 }

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_login/datasources/firebase_auth_service.dart';
+import 'package:firebase_login/datasources/profile_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,23 +42,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => AuthBloc(authRepository: authRepository),
+    return MultiProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => AuthBloc(authRepository: authRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ProfileViewModel(),
+        ),
+      ],
       child: MaterialApp(
         title: 'Team Five 5',
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: const HomePage(), // Definindo a HomePage como página inicial
+        home: const HomePage(),
         routes: {
-          '/profile': (context) => const ProfilePage(
-            username: '',
-            email: '',
-            phoneNumber: '',
-            address: '',
-            profileImage: '',
-          ),
-          '/login': (context) => const LoginPage(), // Adicionando rota para a LoginPage
+          '/profile': (context) => const ProfilePage(),
+          '/login': (context) => const LoginPage(),
           '/sign_up': (context) => const SignUpPage(),
         },
       ),

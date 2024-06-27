@@ -33,7 +33,8 @@ class _ProfilePageState extends State<ProfilePage> {
   final ProfileRepository _profileRepository = ProfileRepository();
   User? user;
   String? imageUrl;
-  List<String> imageUrls = []; // Lista para armazenar URLs das imagens carregadas
+  List<String> imageUrls =
+      []; // Lista para armazenar URLs das imagens carregadas
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -54,7 +55,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadUserProfile() async {
     user = await _profileRepository.getCurrentUser();
     if (user != null) {
-      DocumentSnapshot userProfile = await _profileRepository.getUserProfile(user!);
+      DocumentSnapshot userProfile =
+          await _profileRepository.getUserProfile(user!);
       if (userProfile.exists) {
         SchedulerBinding.instance.addPostFrameCallback((_) {
           setState(() {
@@ -86,32 +88,34 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     }
   }
+
   Future<void> saveProfile() async {
-  try {
-    await _profileRepository.updateUserProfile(user!, {
-      'name': nameController.text,
-      'email': emailController.text,
-      'phone': phoneController.text,
-      'linkedin': linkedinController.text,
-      'address': addressController.text,
-      'imageUrl': imageUrl?? '',
-      'imageUrls': imageUrls,
-    });
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Perfil atualizado com sucesso!'),
-      ),
-    );
-  } catch (e) {
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Erro ao atualizar o perfil: $e'),
-      ),
-    );
+    try {
+      await _profileRepository.updateUserProfile(user!, {
+        'name': nameController.text,
+        'email': emailController.text,
+        'phone': phoneController.text,
+        'linkedin': linkedinController.text,
+        'address': addressController.text,
+        'imageUrl': imageUrl ?? '',
+        'imageUrls': imageUrls,
+      });
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Perfil atualizado com sucesso!'),
+        ),
+      );
+    } catch (e) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao atualizar o perfil: $e'),
+        ),
+      );
+    }
   }
-}
+
   Future<void> pickAndUploadImage() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -125,7 +129,8 @@ class _ProfilePageState extends State<ProfilePage> {
             uploading = true;
           });
           try {
-            String downloadUrl = await _profileRepository.uploadImage(fileBytes);
+            String downloadUrl =
+                await _profileRepository.uploadImage(fileBytes);
             SchedulerBinding.instance.addPostFrameCallback((_) {
               setState(() {
                 imageUrl = downloadUrl;
@@ -155,31 +160,31 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> updateAndSaveProfile() async {
-  try {
-    await _profileRepository.updateUserProfile(user!, {
-      'name': nameController.text,
-      'email': emailController.text,
-      'phone': phoneController.text,
-      'linkedin': linkedinController.text,
-      'address': addressController.text,
-      'imageUrl': imageUrl?? '',
-      'imageUrls': imageUrls,
-    });
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Perfil atualizado com sucesso!'),
-      ),
-    );
-  } catch (e) {
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Erro ao atualizar o perfil: $e'),
-      ),
-    );
+    try {
+      await _profileRepository.updateUserProfile(user!, {
+        'name': nameController.text,
+        'email': emailController.text,
+        'phone': phoneController.text,
+        'linkedin': linkedinController.text,
+        'address': addressController.text,
+        'imageUrl': imageUrl ?? '',
+        'imageUrls': imageUrls,
+      });
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Perfil atualizado com sucesso!'),
+        ),
+      );
+    } catch (e) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao atualizar o perfil: $e'),
+        ),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -232,9 +237,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 Center(
                   child: CircleAvatar(
                     radius: 50,
-                    backgroundImage: imageUrl != null
+                    backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
                         ? CachedNetworkImageProvider(imageUrl!)
-                        : const AssetImage('assets/default_profile_image.png') as ImageProvider,
+                        : const AssetImage('assets/default_profile_image.png'),
                     onBackgroundImageError: (exception, stackTrace) {
                       SchedulerBinding.instance.addPostFrameCallback((_) {
                         setState(() {
@@ -254,15 +259,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16.0),
-                _buildTextFieldWithIcon(nameController, Icons.person, 'Username'),
+                _buildTextFieldWithIcon(
+                    nameController, Icons.person, 'Username'),
                 const SizedBox(height: 16.0),
                 _buildTextFieldWithIcon(emailController, Icons.email, 'Email'),
                 const SizedBox(height: 16.0),
                 _buildTextFieldWithIcon(phoneController, Icons.phone, 'Phone'),
                 const SizedBox(height: 16.0),
-                _buildTextFieldWithIcon(linkedinController, Icons.link, 'LinkedIn'),
+                _buildTextFieldWithIcon(
+                    linkedinController, Icons.link, 'LinkedIn'),
                 const SizedBox(height: 16.0),
-                _buildTextFieldWithIcon(addressController, Icons.location_on, 'Address'),
+                _buildTextFieldWithIcon(
+                    addressController, Icons.location_on, 'Address'),
                 const SizedBox(height: 16.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -307,7 +315,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 16.0),
                 const Text(
                   'Galeria de Imagens',
-                  style: TextStyle(color: Colors.white, fontSize: 18.0, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8.0),
                 GridView.builder(
@@ -323,8 +334,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     return CachedNetworkImage(
                       imageUrl: imageUrls[index],
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                      placeholder: (context, url) =>
+                          const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.error),
                     );
                   },
                 ),

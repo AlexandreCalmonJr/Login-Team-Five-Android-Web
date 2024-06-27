@@ -1,11 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/src/file_picker_result.dart';
+import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_login/repository/profile_repository.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart'; // Importar kIsWeb
 
 class ProfilePage extends StatefulWidget {
   final String username;
@@ -24,6 +25,7 @@ class ProfilePage extends StatefulWidget {
   });
 
   @override
+  // ignore: library_private_types_in_public_api
   _ProfilePageState createState() => _ProfilePageState();
 }
 
@@ -31,6 +33,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final ProfileRepository _profileRepository = ProfileRepository();
   User? user;
   String? imageUrl;
+  List<String> imageUrls = []; // Lista para armazenar URLs das imagens carregadas
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -41,15 +44,11 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _silentMode = false;
   bool _darkMode = false;
   bool uploading = false;
-  double total = 0;
-  List<String> arquivos = [];
-  List<Reference> refs = [];
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
-    loadImages();
   }
 
   Future<void> _loadUserProfile() async {
@@ -57,13 +56,16 @@ class _ProfilePageState extends State<ProfilePage> {
     if (user != null) {
       DocumentSnapshot userProfile = await _profileRepository.getUserProfile(user!);
       if (userProfile.exists) {
-        setState(() {
-          nameController.text = userProfile['name'];
-          emailController.text = userProfile['email'];
-          phoneController.text = userProfile['phone'];
-          linkedinController.text = userProfile['linkedin'];
-          addressController.text = userProfile['address'];
-          imageUrl = userProfile['imageUrl'];
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            nameController.text = userProfile['name'];
+            emailController.text = userProfile['email'];
+            phoneController.text = userProfile['phone'];
+            linkedinController.text = userProfile['linkedin'];
+            addressController.text = userProfile['address'];
+            imageUrl = userProfile['imageUrl'];
+            imageUrls = List<String>.from(userProfile['imageUrls'] ?? []);
+          });
         });
       } else {
         await _profileRepository.createUserProfile(user!, {
@@ -73,87 +75,118 @@ class _ProfilePageState extends State<ProfilePage> {
           'linkedin': '',
           'address': '',
           'imageUrl': '',
+          'imageUrls': [],
         });
-        setState(() {
-          nameController.text = 'Novo Usuário';
-          emailController.text = user!.email!;
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            nameController.text = 'Novo Usuário';
+            emailController.text = user!.email!;
+          });
         });
       }
     }
   }
-
-  Future<void> pickAndUploadImage() async {
-    FilePickerResult? file = await _profileRepository.pickImage();
-    if (file != null) {
-      setState(() {
-        uploading = true;
-      });
-      try {
-        String downloadUrl = await _profileRepository.uploadImage(file.paths as FilePickerResult);
-        setState(() {
-          imageUrl = downloadUrl;
-          uploading = false;
-        });
-        await _profileRepository.updateUserProfile(user!, {'imageUrl': downloadUrl});
-      } catch (e) {
-        setState(() {
-          uploading = false;
-        });
-        print('Erro ao fazer upload da imagem: $e');
-      }
-    }
-  }
-
-  Future<void> loadImages() async {
-    refs = (await FirebaseStorage.instance.ref('images').listAll()).items;
-    for (var ref in refs) {
-      final arquivo = await ref.getDownloadURL();
-      arquivos.add(arquivo);
-    }
-    setState(() => uploading = false);
-  }
-
-  Future<void> deleteImage(int index) async {
-    await FirebaseStorage.instance.ref(refs[index].fullPath).delete();
-    arquivos.removeAt(index);
-    refs.removeAt(index);
-    setState(() {});
-  }
-
-  Widget _buildProfileImage() {
-    return FutureBuilder<bool>(
-      future: _profileRepository.checkImageUrlValidity(imageUrl),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircleAvatar(
-            radius: 50,
-            child: CircularProgressIndicator(),
-          );
-        } else if (snapshot.hasError || !snapshot.data!) {
-          return CircleAvatar(
-            radius: 50,
-            backgroundImage: AssetImage('assets/default_profile_image.png'),
-          );
-        } else {
-          return CircleAvatar(
-            radius: 50,
-            backgroundImage: imageUrl != null
-                ? NetworkImage(imageUrl!)
-                : AssetImage('assets/default_profile_image.png'),
-          );
-        }
-      },
+  Future<void> saveProfile() async {
+  try {
+    await _profileRepository.updateUserProfile(user!, {
+      'name': nameController.text,
+      'email': emailController.text,
+      'phone': phoneController.text,
+      'linkedin': linkedinController.text,
+      'address': addressController.text,
+      'imageUrl': imageUrl?? '',
+      'imageUrls': imageUrls,
+    });
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Perfil atualizado com sucesso!'),
+      ),
+    );
+  } catch (e) {
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Erro ao atualizar o perfil: $e'),
+      ),
     );
   }
+}
+  Future<void> pickAndUploadImage() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+      );
+
+      if (result != null) {
+        Uint8List? fileBytes = result.files.first.bytes;
+        if (fileBytes != null) {
+          setState(() {
+            uploading = true;
+          });
+          try {
+            String downloadUrl = await _profileRepository.uploadImage(fileBytes);
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              setState(() {
+                imageUrl = downloadUrl;
+                imageUrls.add(downloadUrl);
+                uploading = false;
+              });
+            });
+            await _profileRepository.updateUserProfile(user!, {
+              'imageUrl': downloadUrl,
+              'imageUrls': imageUrls,
+            });
+          } catch (e) {
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              setState(() {
+                uploading = false;
+              });
+            });
+            // ignore: avoid_print
+            print('Erro ao fazer upload da imagem: $e');
+          }
+        }
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Erro ao selecionar a imagem: $e');
+    }
+  }
+
+  Future<void> updateAndSaveProfile() async {
+  try {
+    await _profileRepository.updateUserProfile(user!, {
+      'name': nameController.text,
+      'email': emailController.text,
+      'phone': phoneController.text,
+      'linkedin': linkedinController.text,
+      'address': addressController.text,
+      'imageUrl': imageUrl?? '',
+      'imageUrls': imageUrls,
+    });
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Perfil atualizado com sucesso!'),
+      ),
+    );
+  } catch (e) {
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Erro ao atualizar o perfil: $e'),
+      ),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: uploading
-            ? Text('${total.round()}% enviado')
-            : const Text('Perfil Team 5'),
+        title: uploading ? const Text('Enviando...') : const Text('Perfil'),
         actions: [
           uploading
               ? const Padding(
@@ -175,8 +208,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
           IconButton(
             onPressed: () {
-              // Adicionar ação para o ícone de ponto de interrogação
-              // Exemplo: Mostrar um diálogo com informações sobre a página ou a ajuda do usuário
+              // Ação para o ícone de ajuda
             },
             icon: const Icon(Icons.help),
           ),
@@ -184,7 +216,7 @@ class _ProfilePageState extends State<ProfilePage> {
         elevation: 0,
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.black, Colors.blue],
             begin: Alignment.topCenter,
@@ -198,38 +230,50 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
-                  child: _buildProfileImage(),
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: imageUrl != null
+                        ? CachedNetworkImageProvider(imageUrl!)
+                        : const AssetImage('assets/default_profile_image.png') as ImageProvider,
+                    onBackgroundImageError: (exception, stackTrace) {
+                      SchedulerBinding.instance.addPostFrameCallback((_) {
+                        setState(() {
+                          imageUrl = null;
+                        });
+                      });
+                    },
+                  ),
                 ),
                 Center(
                   child: TextButton(
                     onPressed: pickAndUploadImage,
-                    child: Text(
-                      'Change Profile Image',
+                    child: const Text(
+                      'Mudar Imagem do Perfil',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16.0),
-                _buildTextFieldWithIcon(
-                    nameController, Icons.person, 'Username'),
+                _buildTextFieldWithIcon(nameController, Icons.person, 'Username'),
                 const SizedBox(height: 16.0),
                 _buildTextFieldWithIcon(emailController, Icons.email, 'Email'),
                 const SizedBox(height: 16.0),
                 _buildTextFieldWithIcon(phoneController, Icons.phone, 'Phone'),
                 const SizedBox(height: 16.0),
-                _buildTextFieldWithIcon(
-                    linkedinController, Icons.link, 'LinkedIn'),
+                _buildTextFieldWithIcon(linkedinController, Icons.link, 'LinkedIn'),
                 const SizedBox(height: 16.0),
-                _buildTextFieldWithIcon(
-                    addressController, Icons.location_on, 'Address'),
+                _buildTextFieldWithIcon(addressController, Icons.location_on, 'Address'),
                 const SizedBox(height: 16.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Silent Mode', style: TextStyle(color: Colors.white)),
+                    const Text(
+                      'Modo Silencioso',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     Switch(
                       value: _silentMode,
-                      onChanged: (value) {
+                      onChanged: (bool value) {
                         setState(() {
                           _silentMode = value;
                         });
@@ -240,10 +284,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Dark Mode', style: TextStyle(color: Colors.white)),
+                    const Text(
+                      'Modo Noturno',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     Switch(
                       value: _darkMode,
-                      onChanged: (value) {
+                      onChanged: (bool value) {
                         setState(() {
                           _darkMode = value;
                         });
@@ -253,81 +300,34 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 Center(
                   child: ElevatedButton(
-                    onPressed: () async {
-                      try {
-                        await _profileRepository.updateUserProfile(user!, {
-                          'name': nameController.text,
-                          'email': emailController.text,
-                          'phone': phoneController.text,
-                          'linkedin': linkedinController.text,
-                          'address': addressController.text,
-                          'imageUrl': imageUrl,
-                        });
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Perfil atualizado com sucesso!'),
-                          ),
-                        );
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Erro ao atualizar o perfil: $e'),
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[800],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                      ),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    ),
-                    child:
-                        Text('Salvar', style: TextStyle(color: Colors.white)),
+                    onPressed: updateAndSaveProfile,
+                    child: const Text('Salvar'),
                   ),
                 ),
-                const SizedBox(height: 32.0),
-                Text(
-                  'Suas Imagens:',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
+                const SizedBox(height: 16.0),
+                const Text(
+                  'Galeria de Imagens',
+                  style: TextStyle(color: Colors.white, fontSize: 18.0, fontWeight: FontWeight.bold),
                 ),
-                uploading
-                    ? Center(child: CircularProgressIndicator())
-                    : arquivos.isEmpty
-                        ? Center(
-                            child: Text('Não há imagens ainda.',
-                                style: TextStyle(color: Colors.white)))
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: arquivos.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return ListTile(
-                                leading: SizedBox(
-                                  width: 60,
-                                  height: 40,
-                                  child: Image(
-                                    image: CachedNetworkImageProvider(
-                                        arquivos[index]),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                title: Text('Image $index',
-                                    style: TextStyle(color: Colors.white)),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.white),
-                                  onPressed: () => deleteImage(index),
-                                ),
-                              );
-                            },
-                          ),
+                const SizedBox(height: 8.0),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 8.0,
+                    crossAxisSpacing: 8.0,
+                  ),
+                  itemCount: imageUrls.length,
+                  itemBuilder: (context, index) {
+                    return CachedNetworkImage(
+                      imageUrl: imageUrls[index],
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -340,11 +340,11 @@ class _ProfilePageState extends State<ProfilePage> {
       TextEditingController controller, IconData icon, String label) {
     return TextField(
       controller: controller,
-      style: TextStyle(color: Colors.white),
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Colors.white),
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white),
+        labelStyle: const TextStyle(color: Colors.white),
         filled: true,
         fillColor: Colors.grey[800],
         border: OutlineInputBorder(

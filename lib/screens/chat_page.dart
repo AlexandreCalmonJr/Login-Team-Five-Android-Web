@@ -10,8 +10,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
-
-  bool _isOnline = true; // Exemplo de usuário online
+  final List<String> _onlineUsers = ["User1", "User2", "User3"]; // Exemplo de usuários online
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +25,26 @@ class _ChatPageState extends State<ChatPage> {
             const SizedBox(width: 8),
             const Text('Chat'),
             const SizedBox(width: 8),
-            _isOnline
-                ? const Icon(Icons.circle, color: Colors.green, size: 12)
-                : const SizedBox(),
           ],
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(50.0),
+          child: SizedBox(
+            height: 50.0,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _onlineUsers.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Chip(
+                    label: Text(_onlineUsers[index]),
+                    avatar: const Icon(Icons.circle, color: Colors.green, size: 12),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
       body: DefaultTabController(
@@ -57,7 +72,7 @@ class _ChatPageState extends State<ChatPage> {
                 ],
               ),
             ),
-            Divider(height: 1.0),
+            const Divider(height: 1.0),
             Container(
               padding: const EdgeInsets.all(8.0),
               child: Row(
@@ -99,11 +114,11 @@ class _ChatPageState extends State<ChatPage> {
         _messageController.clear();
       });
       // Simula resposta do outro usuário após 1 segundo
-      Future.delayed(Duration(seconds: 1), () {
+      Future.delayed(const Duration(seconds: 1), () {
         setState(() {
           _messages.insert(
             0,
-            ChatMessage(
+            const ChatMessage(
               text: 'Resposta automática.',
               isSentByMe: false,
             ),
@@ -118,7 +133,7 @@ class ChatMessage extends StatelessWidget {
   final String text;
   final bool isSentByMe;
 
-  const ChatMessage({
+  const ChatMessage({super.key, 
     required this.text,
     required this.isSentByMe,
   });
@@ -126,8 +141,8 @@ class ChatMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-      padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+      margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
       decoration: BoxDecoration(
         color: isSentByMe ? Colors.blueAccent : Colors.grey[300],
         borderRadius: BorderRadius.circular(20.0),

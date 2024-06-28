@@ -17,18 +17,6 @@ class UserModel {
     required this.imageUrls,
   });
 
-  factory UserModel.fromMap(Map<String, dynamic> data) {
-    return UserModel(
-      name: data['name'],
-      email: data['email'],
-      phone: data['phone'],
-      linkedin: data['linkedin'],
-      address: data['address'],
-      imageUrl: data['imageUrl'],
-      imageUrls: List<String>.from(data['imageUrls'] ?? []),
-    );
-  }
-
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -39,5 +27,17 @@ class UserModel {
       'imageUrl': imageUrl,
       'imageUrls': imageUrls,
     };
+  }
+
+  factory UserModel.fromMap(Map<String, dynamic> map) {
+    return UserModel(
+      name: map['name'] ?? '',
+      email: map['email'] ?? '',
+      phone: map['phone'] ?? '',
+      linkedin: map['linkedin'] ?? '',
+      address: map['address'] ?? '',
+      imageUrl: map['imageUrl'],
+      imageUrls: List<String>.from(map['imageUrls'] ?? []),
+    );
   }
 }

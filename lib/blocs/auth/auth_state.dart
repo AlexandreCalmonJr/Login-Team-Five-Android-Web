@@ -1,5 +1,3 @@
-// auth_state.dart
-
 import 'package:equatable/equatable.dart';
 
 abstract class AuthState extends Equatable {
@@ -15,6 +13,8 @@ class AuthLoading extends AuthState {}
 
 class Authenticated extends AuthState {}
 
+class GoogleAuthLoading extends AuthState {}
+
 class Unauthenticated extends AuthState {}
 
 class AuthError extends AuthState {
@@ -25,3 +25,5 @@ class AuthError extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+class LoginWithGoogleSuccess extends AuthState {}

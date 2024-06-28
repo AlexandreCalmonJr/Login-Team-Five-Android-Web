@@ -1,8 +1,9 @@
 import 'package:firebase_login/blocs/auth/auth_bloc.dart';
-import 'package:firebase_login/blocs/auth/auth_event.dart';// Importe a página de login aqui
-import 'package:firebase_login/screens/login_page.dart';
+import 'package:firebase_login/blocs/auth/auth_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_login/screens/login_page.dart';
+// Importe necessário para o uso do GoogleSignIn
 
 class SignUpPage extends StatelessWidget {
   const SignUpPage({super.key});
@@ -55,6 +56,21 @@ class SignUpPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   ),
                   child: const Text('Inscrever-se', style: TextStyle(color: Colors.white)),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    authBloc.add(SignUpWithGoogle());
+                  },
+                  icon: Image.asset('assets/google_logo.png', height: 24.0),
+                  label: const Text('Sign Up with Google', style: TextStyle(color: Colors.black)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  ),
                 ),
               ],
             ),

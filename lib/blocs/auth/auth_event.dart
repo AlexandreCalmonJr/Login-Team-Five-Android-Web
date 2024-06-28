@@ -6,7 +6,7 @@ abstract class AuthEvent extends Equatable {
   const AuthEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class LoginWithEmailPassword extends AuthEvent {
@@ -16,7 +16,7 @@ class LoginWithEmailPassword extends AuthEvent {
   const LoginWithEmailPassword(this.email, this.password);
 
   @override
-  List<Object> get props => [email, password];
+  List<Object?> get props => [email, password];
 }
 
 class SignUpWithEmailPassword extends AuthEvent {
@@ -26,7 +26,7 @@ class SignUpWithEmailPassword extends AuthEvent {
   const SignUpWithEmailPassword(this.email, this.password);
 
   @override
-  List<Object> get props => [email, password];
+  List<Object?> get props => [email, password];
 }
 
 class UpdateUserProfile extends AuthEvent {
@@ -45,11 +45,13 @@ class UpdateUserProfile extends AuthEvent {
   });
 
   @override
-  List<Object> get props => [name, email, phone, linkedin, imageUrl];
+  List<Object?> get props => [name, email, phone, linkedin, imageUrl];
 }
 
-class Logout extends AuthEvent {
-  get context => null;
-}
+class Logout extends AuthEvent {}
 
 class SignUpSuccess extends AuthEvent {}
+
+class LoginWithGoogle extends AuthEvent {}
+
+class SignUpWithGoogle extends AuthEvent {} // Certifique-se que SignUpWithGoogle está definido aqui

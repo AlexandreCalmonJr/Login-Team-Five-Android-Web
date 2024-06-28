@@ -11,36 +11,24 @@ class ProfileRepository {
     return _firestore.collection('users').doc(user.uid).get();
   }
 
-  Future<void> createUserProfile(User user, Map<String, dynamic> userProfile) {
-    return _firestore.collection('users').doc(user.uid).set(userProfile);
+  Future<void> createUserProfile(User user, Map<String, dynamic> data) {
+    return _firestore.collection('users').doc(user.uid).set(data);
   }
 
-  Future<void> updateUserProfile(User user, Map<String, dynamic> userProfile) {
-    return _firestore.collection('users').doc(user.uid).update(userProfile);
+  Future<void> updateUserProfile(User user, Map<String, dynamic> data) {
+    return _firestore.collection('users').doc(user.uid).update(data);
   }
 
   Future<String> uploadImage(Uint8List fileBytes, String fileName) async {
-    // Determina o tipo MIME com base na extensão do arquivo
-    String contentType;
-    if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) {
-      contentType = 'image/jpeg';
-    } else if (fileName.endsWith('.png')) {
-      contentType = 'image/png';
-    } else {
-      throw Exception('Unsupported file type');
-    }
-
-    final storageRef = _storage.ref().child('user_images/$fileName');
-    final uploadTask = storageRef.putData(
-      fileBytes,
-      SettableMetadata(contentType: contentType),
-    );
-    final snapshot = await uploadTask.whenComplete(() {});
+    String contentType = 'image/${fileName.split('.').last}';
+    Reference ref = _storage.ref().child('user_images').child(fileName);
+    UploadTask uploadTask = ref.putData(fileBytes, SettableMetadata(contentType: contentType));
+    TaskSnapshot snapshot = await uploadTask;
     return await snapshot.ref.getDownloadURL();
   }
 
   Future<void> deleteImage(String imageUrl) async {
-    final ref = _storage.refFromURL(imageUrl);
+    Reference ref = _storage.refFromURL(imageUrl);
     await ref.delete();
   }
 }

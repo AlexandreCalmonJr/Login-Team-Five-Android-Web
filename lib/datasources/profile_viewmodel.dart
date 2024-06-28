@@ -12,11 +12,13 @@ class ProfileViewModel extends ChangeNotifier {
   UserModel? userModel;
   bool uploading = false;
   String? uploadingError;
+  String? saveMessage;
+  String? uploadMessage;
 
   ProfileViewModel() {
     loadUserProfile();
   }
-  
+
   Future<void> loadUserProfile() async {
     user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -27,7 +29,7 @@ class ProfileViewModel extends ChangeNotifier {
         } else {
           userModel = UserModel(
             name: user!.displayName ?? 'Novo Usuário',
-            email: user!.email!,
+            email: user!.email ?? 'email@example.com',
             phone: '',
             linkedin: '',
             address: '',
@@ -47,9 +49,11 @@ class ProfileViewModel extends ChangeNotifier {
     if (user != null && userModel != null) {
       try {
         await _profileRepository.updateUserProfile(user!, userModel!.toMap());
+        saveMessage = 'Perfil salvo com sucesso!';
         notifyListeners();
       } catch (e) {
-        print('Erro ao salvar o perfil do usuário: $e');
+        saveMessage = 'Erro ao salvar o perfil do usuário: $e';
+        notifyListeners();
       }
     }
   }
@@ -66,12 +70,14 @@ class ProfileViewModel extends ChangeNotifier {
         if (fileBytes != null) {
           uploading = true;
           uploadingError = null;
+          uploadMessage = null;
           notifyListeners();
           try {
             String downloadUrl = await _profileRepository.uploadImage(fileBytes, fileName);
             userModel!.imageUrl = downloadUrl;
             userModel!.imageUrls.add(downloadUrl);
             await saveProfile();
+            uploadMessage = 'Imagem enviada com sucesso!';
           } catch (e) {
             uploadingError = 'Erro ao fazer upload da imagem: $e';
           } finally {

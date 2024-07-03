@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_login/datasources/profile_viewmodel.dart';
+import 'package:firebase_login/models/profile_viewmodel.dart';
 import 'package:firebase_login/screens/chat_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -58,8 +58,8 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(width: 8),
               const Text(
-                'Perfil',
-                style: TextStyle(color: Colors.white),
+                'Perfil do Usuario',
+                style: TextStyle(color: Colors.black),
               ),
               const SizedBox(width: 8),
               IconButton(

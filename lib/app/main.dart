@@ -2,8 +2,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_login/blocs/auth/auth_bloc.dart';
-import 'package:firebase_login/configurations.dart';
-import 'package:firebase_login/datasources/profile_viewmodel.dart';
+import 'package:firebase_login/app/configurations.dart';
+import 'package:firebase_login/models/profile_viewmodel.dart';
 import 'package:firebase_login/repository/auth_repository.dart';
 import 'package:firebase_login/screens/home_page.dart';
 import 'package:firebase_login/screens/login_page.dart';

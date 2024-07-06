@@ -1,8 +1,8 @@
+import 'package:firebase_login/screens/chats_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_login/models/profile_viewmodel.dart';
-import 'package:firebase_login/screens/chat_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -67,7 +67,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ChatPage()),
+                    MaterialPageRoute(builder: (context) => const ChatsScreen()),
                   );
                 },
               ),

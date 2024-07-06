@@ -1,14 +1,16 @@
-
 import 'package:firebase_login/app/constants.dart';
 import 'package:firebase_login/components/filled_outline_button.dart';
-import 'package:firebase_login/models/Chat.dart';
 import 'package:firebase_login/components/messages/message_screen.dart';
+import 'package:firebase_login/models/Chat.dart';
+import 'package:firebase_login/models/user_model.dart';
 import 'package:flutter/material.dart';
 
 import 'chat_card.dart';
 
 class Body extends StatelessWidget {
-  const Body({super.key});
+  final UserModel user;
+
+  const Body({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +22,11 @@ class Body extends StatelessWidget {
           color: kPrimaryColor,
           child: Row(
             children: [
-              FillOutlineButton(press: () {}, text: "Recent Message"),
+              FillOutlineButton(press: () {}, text: "Mensagens Recentes"),
               const SizedBox(width: kDefaultPadding),
               FillOutlineButton(
                 press: () {},
-                text: "Active",
+                text: "Online",
                 isFilled: false,
               ),
             ],
@@ -38,7 +40,7 @@ class Body extends StatelessWidget {
               press: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const MessagesScreen(),
+                  builder: (context) => MessagesScreen(user: user),
                 ),
               ),
             ),

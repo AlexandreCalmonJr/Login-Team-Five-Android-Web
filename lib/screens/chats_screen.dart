@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_login/app/constants.dart';
+import 'package:firebase_login/models/user_model.dart';
 import 'package:flutter/material.dart';
-
 import '../components/chats/components/body.dart';
 
 class ChatsScreen extends StatefulWidget {
@@ -13,11 +15,45 @@ class ChatsScreen extends StatefulWidget {
 
 class _ChatsScreenState extends State<ChatsScreen> {
   int _selectedIndex = 1;
+  UserModel? currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentUser();
+  }
+
+  Future<void> _getCurrentUser() async {
+    User? firebaseUser = FirebaseAuth.instance.currentUser;
+
+    if (firebaseUser != null) {
+      // Supondo que você tenha uma função para buscar o UserModel do Firestore usando o UID do usuário
+      UserModel user = await fetchUserModel(firebaseUser.uid);
+      setState(() {
+        currentUser = user;
+      });
+    }
+  }
+
+  Future<UserModel> fetchUserModel(String uid) async {
+    // Implemente a lógica para buscar o UserModel do Firestore
+    // Exemplo:
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    return UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (currentUser == null) {
+      return Scaffold(
+        appBar: buildAppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: buildAppBar(),
-      body: const Body(),
+      body: Body(user: currentUser!),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         backgroundColor: kPrimaryColor,

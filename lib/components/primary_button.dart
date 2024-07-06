@@ -14,6 +14,7 @@ class PrimaryButton extends StatelessWidget {
 
   final String text;
   final VoidCallback press;
+  // ignore: prefer_typing_uninitialized_variables
   final color;
   final EdgeInsets padding;
 

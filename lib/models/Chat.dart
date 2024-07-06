@@ -1,3 +1,4 @@
+// ignore: file_names
 class Chat {
   final String name, lastMessage, image, time;
   final bool isActive;
